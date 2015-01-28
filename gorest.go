@@ -72,6 +72,7 @@ type endPointStruct struct {
 	parentTypeName       string
 	methodNumberInParent int
 	role                 string
+	produceMime          string
 }
 
 type restStatus struct {
@@ -237,20 +238,27 @@ func (_ manager) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			//}
 			//case GET:
 			{
+				produceMime := _manager().getType(ep.parentTypeName).producesMime
+				if ep.produceMime != "" {
+					produceMime = ep.produceMime
+				}
+
+				if len(data) == 0 {
+					produceMime = Text_Plain
+				}
 				if ctx.responseCode == 0 {
 					if !ctx.responseMimeSet {
-						w.Header().Set("Content-Type", _manager().getType(ep.parentTypeName).producesMime)
+						w.Header().Set("Content-Type", produceMime)
 					}
 					w.WriteHeader(getDefaultResponseCode(ep.requestMethod))
 				} else {
 					if !ctx.dataHasBeenWritten {
 						if !ctx.responseMimeSet {
-							w.Header().Set("Content-Type", _manager().getType(ep.parentTypeName).producesMime)
+							w.Header().Set("Content-Type", produceMime)
 						}
 						w.WriteHeader(ctx.responseCode)
 					}
 				}
-
 				if !ctx.overide {
 					w.Write(data)
 				}

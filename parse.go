@@ -26,6 +26,7 @@
 package gorest
 
 import (
+	"fmt"
 	"log"
 	"reflect"
 	"strings"
@@ -66,6 +67,7 @@ func prepServiceMetaData(root string, tags reflect.StructTag, i interface{}, nam
 		if GetMarshallerByMime(tag) == nil {
 			log.Panic("The Marshaller for mime-type:[" + tag + "], is not registered. Please register this type before registering your service.")
 		}
+		fmt.Println("mime", tag)
 	} else {
 		md.producesMime = Application_Json //Default
 	}
@@ -84,6 +86,9 @@ func prepServiceMetaData(root string, tags reflect.StructTag, i interface{}, nam
 func makeEndPointStruct(tags reflect.StructTag, serviceRoot string) endPointStruct {
 	ms := new(endPointStruct)
 
+	if tag := tags.Get("produces"); tag != "" {
+		ms.produceMime = tag
+	}
 	if tag := tags.Get("method"); tag != "" {
 		if tag == "GET" {
 			ms.requestMethod = GET

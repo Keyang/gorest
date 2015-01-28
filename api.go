@@ -26,6 +26,7 @@
 package gorest
 
 import (
+	"encoding/json"
 	"io"
 	"net/http"
 	"strconv"
@@ -90,9 +91,27 @@ func (serv RestService) Request() *http.Request {
 }
 
 //Short cut for restService.RB().SetResponseCode(code).Write([]byte(err.Error()))
-func (serv RestService) WriteError(code int, err error) *ResponseBuilder {
+func (serv RestService) WriteErr(code int, err error) *ResponseBuilder {
 	serv.RB().Overide(true)
 	return serv.RB().SetResponseCode(code).Write([]byte(err.Error()))
+}
+
+//Write JSON Response with Error
+func (serv RestService) WriteError(errCode int, err error) *ResponseBuilder {
+	res := ERRResponse{
+		Code: errCode,
+		Err:  err.Error(),
+	}
+	b, _ := json.Marshal(res)
+	serv.RB().Overide(true)
+	var statusCode int
+	if errCode >= 100 && errCode <= 600 {
+		statusCode = errCode
+	} else {
+		statusCode = 400
+	}
+	serv.RB().SetContentType(Application_Json)
+	return serv.RB().SetResponseCode(statusCode).Write(b)
 }
 
 //func (serv RestService) ProxyTo(name, path string) {
